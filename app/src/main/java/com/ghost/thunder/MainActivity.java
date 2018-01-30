@@ -25,13 +25,13 @@ public class MainActivity extends AppCompatActivity {
             super.handleMessage(msg);
             if(msg.what == 0) {
                 long taskId = (long) msg.obj;
-                XLTaskInfo taskInfo = XLTaskHelper.instance().getTaskInfo(taskId);
+                XLTaskInfo taskInfo = XLTaskHelper.instance(getApplicationContext()).getTaskInfo(taskId);
                 tvStatus.setText(
                         "fileSize:" + taskInfo.mFileSize
                                 + " downSize:" + taskInfo.mDownloadSize
                                 + " speed:" + convertFileSize(taskInfo.mDownloadSpeed)
-                                + "/s dcdnSoeed:" + convertFileSize(taskInfo.mAdditionalResDCDNSpeed)
-                                + "/s filePath:" + "/sdcard/" + XLTaskHelper.instance().getFileName(inputUrl.getText().toString())
+                                + "/s dcdnSpeed:" + convertFileSize(taskInfo.mAdditionalResDCDNSpeed)
+                                + "/s filePath:" + "/sdcard/" + XLTaskHelper.instance(getApplicationContext()).getFileName(inputUrl.getText().toString())
                 );
                 handler.sendMessageDelayed(handler.obtainMessage(0,taskId),1000);
             }
@@ -49,7 +49,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(!TextUtils.isEmpty(inputUrl.getText())) {
-                    long taskId = XLTaskHelper.instance().addThunderTask(inputUrl.getText().toString(),"/sdcard/",null);
+                    long taskId = 0;
+                    try {
+                        taskId = XLTaskHelper.instance(getApplicationContext()).addThunderTask(inputUrl.getText().toString(),"/sdcard/",null);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     handler.sendMessage(handler.obtainMessage(0,taskId));
                 }
             }

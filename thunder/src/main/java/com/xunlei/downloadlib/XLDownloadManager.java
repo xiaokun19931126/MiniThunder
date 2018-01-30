@@ -31,6 +31,7 @@ import com.xunlei.downloadlib.parameter.ServerResourceParam;
 import com.xunlei.downloadlib.parameter.ThunderUrlInfo;
 import com.xunlei.downloadlib.parameter.TorrentInfo;
 import com.xunlei.downloadlib.parameter.UrlQuickInfo;
+import com.xunlei.downloadlib.parameter.XLConstant;
 import com.xunlei.downloadlib.parameter.XLConstant.XLManagerStatus;
 import com.xunlei.downloadlib.parameter.XLProductInfo;
 import com.xunlei.downloadlib.parameter.XLSessionInfo;
@@ -123,7 +124,7 @@ public class XLDownloadManager {
     }
 
     public synchronized int init(Context context, InitParam initParam, boolean z) {
-        int i = 9900;
+        int i = XLConstant.XLErrorCode.DOWNLOAD_MANAGER_ERROR;
         int i2 = 0;
         synchronized (this) {
             if (!mIsLoadErrcodeMsg) {
@@ -136,28 +137,21 @@ public class XLDownloadManager {
                 if (mDownloadManagerState == XLManagerStatus.MANAGER_RUNNING) {
                     XLLog.i(TAG, "XLDownloadManager is already init");
                 } else if (this.mLoader != null) {
-                    this.mAppkeyChecker = new XLAppKeyChecker(context, initParam.mAppKey);
-                    if (this.mAppkeyChecker.verify()) {
-                        XLLog.i(TAG, "appKey check successful");
-                        String soAppKey = this.mAppkeyChecker.getSoAppKey();
-                        String peerid = getPeerid();
-                        String guid = getGuid();
-                        XLLog.i(TAG, "Peerid:" + new String(Base64.encode(peerid.getBytes(), 0)));
-                        XLLog.i(TAG, "Guid:" + new String(Base64.encode(guid.getBytes(), 0)));
-                        if (mAllowExecution) {
-                            i2 = XLUtil.getNetworkTypeComplete(context);
-                        }
-                        i = this.mLoader.init(soAppKey, "com.xunlei.downloadprovider", initParam.mAppVersion, "", peerid, guid, initParam.mStatSavePath, initParam.mStatCfgSavePath, i2, initParam.mPermissionLevel);
-                        if (i != 9000) {
-                            mDownloadManagerState = XLManagerStatus.MANAGER_INIT_FAIL;
-                        } else {
-                            mDownloadManagerState = XLManagerStatus.MANAGER_RUNNING;
-                            doMonitorNetworkChange();
-                            setLocalProperty("PhoneModel", Build.MODEL);
-                        }
+                    String peerid = getPeerid();
+                    String guid = getGuid();
+                    XLLog.i(TAG, "Peerid:" + new String(Base64.encode(peerid.getBytes(), 0)));
+                    XLLog.i(TAG, "Guid:" + new String(Base64.encode(guid.getBytes(), 0)));
+                    if (mAllowExecution) {
+                        i2 = XLUtil.getNetworkTypeComplete(context);
+                    }
+                    i = this.mLoader.init(context, initParam.mAppVersion, "", peerid, guid, initParam.mStatSavePath, initParam.mStatCfgSavePath, i2, initParam.mPermissionLevel);
+                    if (i != 9000) {
+                        mDownloadManagerState = XLManagerStatus.MANAGER_INIT_FAIL;
+                        XLLog.e(TAG, "XLDownloadManager init failed ret=" + i);
                     } else {
-                        XLLog.i(TAG, "appKey check failed");
-                        i = 9901;
+                        mDownloadManagerState = XLManagerStatus.MANAGER_RUNNING;
+                        doMonitorNetworkChange();
+                        setLocalProperty("PhoneModel", Build.MODEL);
                     }
                 }
             }
